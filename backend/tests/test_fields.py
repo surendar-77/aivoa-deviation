@@ -104,4 +104,4 @@ def test_llm_typography_is_normalised():
     rng = coerce_value("approved_range", "60\u201165\u202f°C")
     assert rng == "60-65 °C"
     assert coerce_value("batch_number", "MS\u20112609\u2011017") == "MS-2609-017"
-    assert deviation_magnitude(rng, coerce_value("observed_value", "71\u202f°C")).startswith("+6 °C above")
+    assert (deviation_magnitude(rng, coerce_value("observed_value", "71\u202f°C")) or "").startswith("+6 °C above")

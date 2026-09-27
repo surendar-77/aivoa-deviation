@@ -1,0 +1,8 @@
+{
+  // Use the backend's virtual environment so imports (langgraph, fastapi, ...) resolve in the editor.
+  "python.defaultInterpreterPath": "${workspaceFolder}/backend/.venv/Scripts/python.exe",
+  "python.analysis.extraPaths": ["${workspaceFolder}/backend"],
+  "python.testing.pytestEnabled": true,
+  "python.testing.cwd": "${workspaceFolder}/backend",
+  "python.testing.pytestArgs": ["tests"]
+}

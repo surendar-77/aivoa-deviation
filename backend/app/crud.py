@@ -121,7 +121,9 @@ def create_deviation(db: Session, form: dict, user_overrides: dict, changes: lis
     db.flush()
     _write_audit(db, new["deviation_id"], {}, new, changes, user)
     db.commit()
-    return get_deviation(db, new["deviation_id"])
+    saved = get_deviation(db, new["deviation_id"])
+    assert saved is not None  # just inserted
+    return saved
 
 
 def update_deviation(db: Session, deviation_id: str, form: dict, user_overrides: dict,

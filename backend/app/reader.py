@@ -66,11 +66,11 @@ def preprocess_for_ocr(img: Image.Image) -> Image.Image:
     Why: Tesseract is most accurate on high-contrast text ~30px tall; phone photos
     and low-res scans are often small and washed out.
     """
-    img = ImageOps.exif_transpose(img)  # respect phone camera rotation
+    img = ImageOps.exif_transpose(img) or img  # respect phone camera rotation
     img = img.convert("L")
     if img.width < 1800:
         scale = 1800 / img.width
-        img = img.resize((int(img.width * scale), int(img.height * scale)), Image.LANCZOS)
+        img = img.resize((int(img.width * scale), int(img.height * scale)), Image.Resampling.LANCZOS)
     img = ImageOps.autocontrast(img, cutoff=2)
     return img.filter(ImageFilter.SHARPEN)
 
@@ -127,7 +127,10 @@ def read_pdf(data: bytes) -> tuple[str, str]:
     try:
         from pdf2image import convert_from_bytes
 
-        pages = convert_from_bytes(data, dpi=300, poppler_path=settings.POPPLER_PATH or None)
+        if settings.POPPLER_PATH:
+            pages = convert_from_bytes(data, dpi=300, poppler_path=settings.POPPLER_PATH)
+        else:  # poppler on PATH (Docker, Linux)
+            pages = convert_from_bytes(data, dpi=300)
         return "\n".join(ocr_image(p) for p in pages).strip(), "scanned PDF OCR (poppler + Tesseract)"
     except DocumentReadError:
         raise

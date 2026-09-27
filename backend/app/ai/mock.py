@@ -74,7 +74,7 @@ def extract(text: str) -> dict:
         m = _LABEL_RE.match(line)
         inline_key = LABELS.get(m.group(1).strip().lower()) if m else None
         heading_key = LABELS.get(stripped.lower().rstrip(":"))  # "Batch No." on its own line (PDF tables)
-        if inline_key:                          # "Batch No: X"
+        if m and inline_key:                    # "Batch No: X"
             put(inline_key, m.group(2).strip())
             current = inline_key if inline_key in narrative else None
         elif heading_key:                       # label line; value on the next line(s)

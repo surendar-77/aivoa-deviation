@@ -8,6 +8,7 @@ from __future__ import annotations
 import json
 import re
 from functools import lru_cache
+from typing import Any
 
 from ..config import settings
 
@@ -22,17 +23,19 @@ def _client(light: bool = False):
     which roughly halves output tokens - important on Groq's free tier (~8k tokens/minute).
     Extraction, edits and risk scoring keep the model's default reasoning for accuracy."""
     from langchain_groq import ChatGroq
+    from pydantic import SecretStr
 
-    kwargs = {"response_format": {"type": "json_object"}}  # Groq JSON mode
+    kwargs: dict[str, Any] = {"response_format": {"type": "json_object"}}  # Groq JSON mode
     if light and "gpt-oss" in settings.GROQ_MODEL:
         kwargs["reasoning_effort"] = "low"
     return ChatGroq(
         model=settings.GROQ_MODEL,
-        api_key=settings.GROQ_API_KEY,
+        api_key=SecretStr(settings.GROQ_API_KEY),
         temperature=0,
         max_retries=3,  # the Groq client waits for Retry-After on 429 before each retry
         timeout=90,
         model_kwargs=kwargs,
+        stop_sequences=None,
     )
 
 
@@ -77,7 +80,8 @@ def call_json(system: str, user: str, light: bool = False) -> dict:
         except Exception as exc:  # network / auth / rate-limit
             raise LLMError(_friendly(exc)) from exc
         try:
-            return parse_json(response.content)
+            content = response.content
+            return parse_json(content if isinstance(content, str) else "")  # non-text reply -> retry
         except (json.JSONDecodeError, TypeError):
             if attempt == 0:
                 messages += [response, HumanMessage(

@@ -4,6 +4,7 @@ Why: fields.py is the single source of truth - adding a field there adds the
 DB column automatically, so the form, the AI and the table never disagree.
 """
 from datetime import date, datetime, timezone
+from typing import Any
 
 from sqlalchemy import JSON, Date, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
@@ -40,7 +41,8 @@ _deviation_attrs = {
     "last_updated_at": mapped_column(DateTime(timezone=True), default=_utcnow, onupdate=_utcnow, nullable=False),
     **{f.key: _column_for(f) for f in FIELDS},
 }
-Deviation = type("Deviation", (Base,), _deviation_attrs)
+# Typed as Any: the columns are created at runtime from the registry, so static checkers cannot see them.
+Deviation: Any = type("Deviation", (Base,), _deviation_attrs)
 
 
 def deviation_to_dict(row) -> dict:

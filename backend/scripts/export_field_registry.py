@@ -61,7 +61,7 @@ def carried_notes(path: Path) -> dict[str, tuple[str, str]]:
         k, o, n = head.index("Field key"), head.index("Owner"), head.index("Notes")
     except ValueError:
         return {}
-    return {r[k]: (r[o] or "", r[n] or "") for r in ws.iter_rows(min_row=2, values_only=True) if r[k]}
+    return {str(r[k]): (str(r[o] or ""), str(r[n] or "")) for r in ws.iter_rows(min_row=2, values_only=True) if r[k]}
 
 
 def style_header(ws, row: int = 1) -> None:
@@ -93,6 +93,7 @@ def build(out: Path) -> dict:
 
     # ------------------------------------------------------------ Fields
     ws = wb.active
+    assert ws is not None  # a new Workbook always has one sheet
     ws.title = "Fields"
     headers = ["#", "Field key", "Screen label (plain)", "Regulatory label", "Section", "Tier", "Filled by",
                "Type", "Allowed options", "Change by chat?", "Re-checks risk?", "Description / help",

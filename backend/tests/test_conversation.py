@@ -1,6 +1,7 @@
 """Conversational NLP + guardrails: chit-chat must never change the form (mock mode, no DB)."""
 from datetime import date, timedelta
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -131,7 +132,7 @@ def test_no_pending_question_when_the_copilot_did_not_ask():
     assert conversation.pending_question(history, "reported by") is None
 
 
-def _router_state(message, history, form=None):
+def _router_state(message, history, form=None) -> Any:
     return {"message": message, "history": history, "file_bytes": None, "errors": [],
             "form": form if form is not None else {"title": "Reactor excursion", "batch_number": "MS-1"}}
 

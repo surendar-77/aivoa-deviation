@@ -24,7 +24,7 @@ OVERRIDABLE_RULE_FIELDS = {"severity_classification", "capa_required"}
 # ---------------------------------------------------------------------------
 def compute_rpn(s: Optional[int], o: Optional[int], d: Optional[int]) -> Optional[int]:
     """Risk Priority Number = S x O x D (FMEA). None until all three scores exist."""
-    if not all(isinstance(x, int) for x in (s, o, d)):
+    if not (isinstance(s, int) and isinstance(o, int) and isinstance(d, int)):
         return None
     return s * o * d
 
@@ -83,7 +83,9 @@ class Spec:
             return f"{_fmt(self.low)}–{_fmt(self.high)}{u}"
         if self.high is not None:
             return f"NMT {_fmt(self.high)}{u}"
-        return f"NLT {_fmt(self.low)}{u}"
+        if self.low is not None:
+            return f"NLT {_fmt(self.low)}{u}"
+        return ""
 
 
 def _fmt(x: float) -> str:

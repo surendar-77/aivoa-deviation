@@ -56,6 +56,7 @@ def test_update_cannot_change_identity(db):
     dev = crud.create_deviation(db, FORM, {}, [])["form"]
     upd = crud.update_deviation(db, dev["deviation_id"],
                                 {**dev, "deviation_id": "HACK", "date_reported": "2000-01-01"}, {}, [])
+    assert upd is not None
     assert upd["form"]["deviation_id"] == dev["deviation_id"]
     assert upd["form"]["date_reported"] == dev["date_reported"]
 

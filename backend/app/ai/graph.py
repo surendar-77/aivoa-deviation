@@ -16,7 +16,7 @@ derived values (rules.py). Each node is small enough to test and explain.
 from __future__ import annotations
 
 import base64
-from typing import Optional, TypedDict
+from typing import NotRequired, Optional, TypedDict
 
 from langchain_core.runnables import RunnableConfig
 from langgraph.graph import END, START, StateGraph
@@ -37,7 +37,8 @@ RISK_OUTPUT_KEYS = SCORE_KEYS + ["severity_reasoning", "impact_assessment", "sug
                                  "applicable_sop"]
 
 
-class AgentState(TypedDict, total=False):
+class AgentState(TypedDict):
+    """Graph state. Keys without NotRequired are always set by run_agent(); the rest are filled by nodes."""
     # inputs
     message: str
     file_name: Optional[str]
@@ -47,9 +48,9 @@ class AgentState(TypedDict, total=False):
     history: list[dict]
     user_overrides: dict
     # working data
-    source_text: Optional[str]
-    extraction_method: Optional[str]
-    intent: str
+    source_text: NotRequired[Optional[str]]
+    extraction_method: NotRequired[Optional[str]]
+    intent: NotRequired[str]
     tools_used: list[str]
     sources: dict                   # {field: (source_label, instruction)} -> change log / audit
     needs_risk: bool
@@ -57,7 +58,7 @@ class AgentState(TypedDict, total=False):
     errors: list[str]
     action: Optional[str]
     # output
-    response: dict
+    response: NotRequired[dict]
 
 
 def _mark(sources: dict, keys, source: str, instruction: Optional[str] = None) -> dict:
@@ -82,7 +83,7 @@ def read_input(state: AgentState) -> dict:
 def pdf_extraction_node(state: AgentState) -> dict:
     """Tool node: uploaded file -> text (PDF / OCR / EML / TXT)."""
     result = pdf_extraction_tool.invoke({
-        "file_name": state["file_name"], "file_b64": base64.b64encode(state["file_bytes"]).decode()})
+        "file_name": state["file_name"], "file_b64": base64.b64encode(state["file_bytes"] or b"").decode()})
     used = state["tools_used"] + ["pdf_extraction_tool"]
     if "error" in result:
         return {"errors": state["errors"] + [result["error"]], "tools_used": used}
@@ -202,9 +203,9 @@ def apply_rules(state: AgentState, config: RunnableConfig) -> dict:
 
 def converse(state: AgentState) -> dict:
     """Small talk, help, review questions (missing / summary / explain / glossary), undo, off-topic."""
-    reply = conversation.answer(state["intent"], state.get("message", ""), state["form"],
+    reply = conversation.answer(state.get("intent", "chat"), state.get("message", ""), state["form"],
                                 state.get("user_overrides") or {}, state.get("history") or [])
-    return {"replies": state["replies"] + [reply], "action": "undo" if state["intent"] == "undo" else None}
+    return {"replies": state["replies"] + [reply], "action": "undo" if state.get("intent", "chat") == "undo" else None}
 
 
 def save_action(state: AgentState) -> dict:
@@ -248,17 +249,17 @@ def finalize(state: AgentState) -> dict:
     replies = list(state["replies"])
     risk_keys = set(RISK_OUTPUT_KEYS) | {"rpn", "severity_classification"}
     risk_changed = any(c["field"] in risk_keys for c in changes)
-    if new.get("severity_classification") and (state["intent"] in ("log", "assess") or risk_changed):
+    if new.get("severity_classification") and (state.get("intent", "chat") in ("log", "assess") or risk_changed):
         overridden = "severity_classification" in (state.get("user_overrides") or {})
         replies.append(wording.risk_line(new, overridden))
     miss = missing_fields(new) if _has_data(new) else []
-    if state["intent"] == "log" and miss:
+    if state.get("intent", "chat") == "log" and miss:
         replies.append("Not in the report, so I left these blank: " + wording.labels(miss) + ".")
     replies += [f"⚠ {e}" for e in state["errors"]]
 
     text = state.get("source_text")
     return {"response": {
-        "intent": state["intent"],
+        "intent": state.get("intent", "chat"),
         "reply": ("\n".join(r for r in replies if r) or "Done.").translate(_TYPOGRAPHY),
         "form": new,
         "changes": changes,
@@ -298,11 +299,11 @@ def _after_read(state: AgentState) -> str:
 def _after_router(state: AgentState) -> str:
     return {"log": "log_interaction_tool", "edit": "edit_interaction_tool", "assess": "assess_risk",
             "save": "save_action", "reset": "reset_action",
-            **{i: "converse" for i in conversation.CONVERSATIONAL}}.get(state["intent"], "chat_reply")
+            **{i: "converse" for i in conversation.CONVERSATIONAL}}.get(state.get("intent", "chat"), "chat_reply")
 
 
 def _after_log(state: AgentState) -> str:
-    return "assess_risk" if state.get("needs_risk") and state["intent"] == "log" else "finalize"
+    return "assess_risk" if state.get("needs_risk") and state.get("intent", "chat") == "log" else "finalize"
 
 
 def _after_edit(state: AgentState) -> str:

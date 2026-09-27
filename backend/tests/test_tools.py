@@ -59,8 +59,8 @@ def test_graph_routes_through_named_tools():
 def test_setting_a_calculated_field_explains_why_it_cannot_be_typed_in():
     from app.ai.operations import computed_field_hint
 
-    assert "calculated automatically" in computed_field_hint("set rpn to 5")
-    assert "calculated automatically" in computed_field_hint("change the risk score to 20")
+    assert "calculated automatically" in (computed_field_hint("set rpn to 5") or "")
+    assert "calculated automatically" in (computed_field_hint("change the risk score to 20") or "")
     assert computed_field_hint("set the batch number to B-1") is None
 
 

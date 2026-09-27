@@ -13,7 +13,7 @@ from __future__ import annotations
 import re
 from typing import Optional
 
-from ..fields import FIELD_MAP, TIER_A_KEYS, missing_fields
+from ..fields import TIER_A_KEYS, missing_fields
 from . import wording
 
 # Intents answered here (the graph routes them to the "converse" node).
@@ -223,7 +223,8 @@ def answer(intent: str, message: str, form: dict, user_overrides: dict, history:
         return ("I can only help with reporting and reviewing quality problems, so I haven't changed anything in "
                 "the form. Try pasting a report, or say \"help\" to see what I can do.")
     if intent == "glossary":
-        return GLOSSARY[_glossary_term(_norm(message))]
+        term = _glossary_term(_norm(message))
+        return GLOSSARY[term] if term else "I don't have a plain-language definition for that term yet."
     if intent == "undo":
         return "Reverting the last change…"  # the client restores its previous snapshot
 
