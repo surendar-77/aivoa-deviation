@@ -1,0 +1,6 @@
+# Keep sample documents byte-exact (line-ending conversion would corrupt PDFs)
+*.pdf binary
+*.eml -text
+*.xlsx binary
+*.jpg binary
+*.png binary

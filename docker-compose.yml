@@ -1,0 +1,48 @@
+# One-command setup:  docker compose up --build   →  open http://localhost:8080
+# Needs backend/.env with GROQ_API_KEY (copy backend/.env.example). Without a key the app runs in Mock mode.
+# Private by design: only this computer can open the app; the database and API are never published;
+# the database password comes from the git-ignored root .env (POSTGRES_PASSWORD).
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: aivoa_qms
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in the root .env file}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d aivoa_qms"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    env_file:
+      - path: ./backend/.env
+        required: false
+    environment:
+      # Container values win over backend/.env (which points at localhost / Windows paths).
+      DATABASE_URL: postgresql+psycopg2://postgres:${POSTGRES_PASSWORD}@db:5432/aivoa_qms
+      TESSERACT_CMD: ""
+      POPPLER_PATH: ""
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    ports:
+      # Private: bound to this computer only (127.0.0.1). Nothing on the network can reach it.
+      - "127.0.0.1:${APP_PORT:-8080}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  pgdata:

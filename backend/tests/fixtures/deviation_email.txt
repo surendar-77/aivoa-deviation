@@ -1,0 +1,23 @@
+From: Ravi Kumar <ravi.kumar@apiplant.example>
+To: QA Deviation Desk <qa.deviations@apiplant.example>
+Date: 14 September 2026 09:42
+Subject: Temperature excursion in Reactor R-201 - Metoprolol Succinate batch MS-2609-017
+
+Dear QA Team,
+
+This is to report a process deviation observed in Production Block B (Crystallization Area) during the night shift.
+
+On 14/09/2026 at approximately 02:15 hrs, during the cooling crystallization stage of Metoprolol Succinate batch MS-2609-017 in glass-lined reactor R-201, the reactor mass temperature rose to 71 °C. The approved range for this step as per the BMR is 60-65 °C. The excursion lasted about 25 minutes before the temperature was brought back within range.
+
+The DCS alarm was acknowledged by the shift operator. Preliminary check indicates that the chilled water supply valve (TCV-201) to the reactor jacket was sticking, which reduced cooling flow.
+
+Immediate action taken:
+- Crystallization hold-time was extended and the batch was brought back to 62 °C.
+- Batch MS-2609-017 has been put on hold in the reactor pending QA evaluation.
+- Maintenance has been informed to inspect valve TCV-201.
+
+This is an unplanned deviation. The higher temperature may affect crystal form / particle size and impurity profile, so GMP impact is potential until the in-process test results are reviewed.
+
+Regards,
+Ravi Kumar
+Production Officer, Production Department
